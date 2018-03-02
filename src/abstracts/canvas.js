@@ -3,7 +3,7 @@ const Canvas = (options) => {
 
 	const html = document.querySelector('canvas')
 	const ctx = html.getContext('2d')
-	const scale = 2
+	const scale = window.devicePixelRatio
 
 	const setDimensions = (width, height) => {
 		html.width = width * scale
@@ -28,7 +28,7 @@ const Canvas = (options) => {
 			clear,
 			setDimensions,
 			offset
-			
+
 		},
 		options
 	)

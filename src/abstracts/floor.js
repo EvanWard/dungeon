@@ -1,21 +1,22 @@
 import Room from './room.js'
+import PointConnector from './pointConnector.js'
 
 
 const Floor = (options) => {
-	const { numberOfRooms, spawnWidth, spawnHeight, minRoomSize = 10, maxRoomSize = 10, roomSpacing, widthRange, heightRange } = options
+	const { numberOfRooms, roomsToDrop, spawnWidth, spawnHeight, minRoomSize = 10, maxRoomSize = 10, roomSpacing, widthRange, heightRange } = options
 
 	const pointInEllipse = (width, height) => {
-		const t = 2 * Math.PI * Math.random()
-		const u = Math.random() * Math.random()
-		let r = null
-		if ( u > 1) {
-			r = 2 - u
+		const randomRadian = 2 * Math.PI * Math.random()
+		const seed = Math.random() * Math.random()
+		let randomizer = null
+		if ( seed > 1) {
+			randomizer = 2 - seed
 		} else {
-			r = u
+			randomizer = seed
 		}
 		return {
-			x: Math.round(width * r * Math.cos(t) / 2),
-			y: Math.round(height * r * Math.sin(t) / 2)
+			x: Math.round(width * randomizer * Math.cos(randomRadian) / 2),
+			y: Math.round(height * randomizer * Math.sin(randomRadian) / 2)
 		}
 	}
 
@@ -23,7 +24,7 @@ const Floor = (options) => {
 		return min + Math.random() * (max - min)
 	}
 
-	const rooms = Array.from({length: numberOfRooms}, _ => { 
+	let rooms = Array.from({length: numberOfRooms}, _ => {
 		const point = pointInEllipse(spawnWidth, spawnHeight)
 		const width = widthRange ? random(widthRange[0], widthRange[1]) : random(minRoomSize, maxRoomSize)
 		const height = heightRange ? random(heightRange[0], heightRange[1]) : random(minRoomSize, maxRoomSize)
@@ -34,8 +35,29 @@ const Floor = (options) => {
 				x: point.x,
 				y: point.y
 			}
-		}) 
+		})
 	})
+
+	let haveRoomsBeenDropped = false
+	const dropRooms = (amount) => {
+		if (haveRoomsBeenDropped) {
+			return
+		}
+		haveRoomsBeenDropped = true
+
+		let dropped = 0
+		const percentPerRoom = 1 / rooms.length
+
+		while (dropped < amount) {
+			rooms = rooms.filter((room) => {
+				if (Math.random() >= 0.7 && dropped < amount) {
+					dropped += percentPerRoom
+					return false
+				}
+				return true
+			})
+		}
+	}
 
 	const separateRooms = _ => {
 		let roomA, roomB, rectA, rectB, deltaX, deltaY
@@ -83,6 +105,9 @@ const Floor = (options) => {
 				callbacks.onIteration()
 			}
 		} else {
+			if (roomsToDrop !== undefined) {
+				dropRooms(roomsToDrop)
+			}
 			if (typeof callbacks.onCompletion === 'function') {
 				callbacks.onCompletion()
 			}
@@ -177,7 +202,7 @@ const Floor = (options) => {
 		})
 	}
 
-		
+
 
 	const draw = (ctx, gridSize, offset) => {
 		rooms.forEach((room) => {
@@ -185,51 +210,8 @@ const Floor = (options) => {
 		})
 	}
 
-	const getNeighborhood = _ => {
-		const distanceSquared = (a, b) => {
-			const dx = a.x - b.x
-			const dy = a.y - b.y
-			return dx * dx + dy * dy
-		}
-
-		let roomA, roomB, roomC,
-			abDist, acDist, bcDist,
-			skip
-
-		let lines = []
-
-		for (let i = 0; i < rooms.length; i++) {
-			roomA = rooms[i]
-			for (let j = i + 1; j < rooms.length; j++) {
-				skip = false
-				roomB = rooms[j]
-				abDist = distanceSquared(roomA.getRect().midPoint, roomB.getRect().midPoint)
-				for (let k = 0; k < rooms.length; k++) {
-					if (k === i || k === j) {
-						continue
-					}
-					roomC = rooms[k]
-					acDist = distanceSquared(roomA.getRect().midPoint, roomC.getRect().midPoint)
-					bcDist = distanceSquared(roomB.getRect().midPoint, roomC.getRect().midPoint)
-
-					if (acDist < abDist && bcDist < abDist) {
-						skip = true
-					}
-					if (skip) {
-						break
-					}
-				}
-				if (!skip) {
-					lines.push({ p1: roomA.getRect().midPoint, p2: roomB.getRect().midPoint })
-				}
-			}
-		}
-
-		return lines
-	}
-
 	const drawNeighborhood = (ctx, gridSize, offset) => {
-		const lines = getNeighborhood()
+		const lines = PointConnector().getNeighborhood(rooms.map((room) => { return room.getRect().midPoint }))
 
 		ctx.strokeStyle = 'white'
 	    ctx.lineWidth = 1 * gridSize
@@ -243,8 +225,30 @@ const Floor = (options) => {
 		})
 	}
 
+	const drawHallways = (ctx, gridSize, offset) => {
+		const lines = PointConnector().getNeighborhood(rooms.map((room) => { return room.getRect().midPoint }))
+		const hallways = lines.map((line) => {
+			const bendUp = Math.random() > 0.5 ? true : false
+			const startPoint = line.p1
+			const endPoint = line.p2
+			const midPoint = { x: bendUp ? endPoint.x : startPoint.x, y: bendUp ? startPoint.y : endPoint.y }
+			return { p1: startPoint, p2: midPoint, p3: endPoint}
+		})
+		hallways.forEach((hallway) => {
+			ctx.strokeStyle = 'red'
+			ctx.lineWidth = 2 * gridSize
+			ctx.beginPath()
+			ctx.moveTo(hallway.p1.x * gridSize + offset.x, hallway.p1.y * gridSize + offset.y)
+			ctx.lineTo(hallway.p2.x * gridSize + offset.x, hallway.p2.y * gridSize + offset.y)
+			ctx.lineTo(hallway.p3.x * gridSize + offset.x, hallway.p3.y * gridSize + offset.y)
+			ctx.stroke()
+			ctx.closePath()
+		})
+	}
+
 	return Object.assign(
 		{
+			dropRooms,
 			separateRooms,
 			separateRoomsEntirely,
 			tightenRooms,
@@ -252,8 +256,9 @@ const Floor = (options) => {
 			rooms,
 
 			draw,
-			drawNeighborhood
-		}, 
+			drawNeighborhood,
+			drawHallways
+		},
 		options
 	)
 }

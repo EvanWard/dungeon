@@ -6,7 +6,7 @@ const Room = (options) => {
 		coordinates.x = Math.floor(coordinates.x + x)
 		coordinates.y = Math.floor(coordinates.y + y)
 	}
-	
+
 	const getRect = _ => {
 		const x = coordinates.x
 		const y = coordinates.y
@@ -15,7 +15,8 @@ const Room = (options) => {
 			right: x + width,
 			top: y,
 			bottom: y + height,
-			midPoint: { x: x + width / 2, y: y + height / 2}
+			midPoint: { x: x + width / 2, y: y + height / 2},
+			area: width * height
 		}
 	}
 
