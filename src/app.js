@@ -6,65 +6,60 @@
 import React, { Component } from 'react';
 import './app.css';
 
-import Floor from './abstracts/floor.js'
-import Cave from './abstracts/cave.js'
+import DungeonGrid from './abstracts/dungeonGrid.js'
+import CaveGrid from './abstracts/caveGrid.js'
 import Canvas from './abstracts/canvas.js'
-
 import CanvasNode from './components/canvas/canvas.js'
 
 export default class App extends Component {
 	constructor(props) {
 		super(props)
-		const floor = Floor({
-			numberOfRooms: 100,
-			roomsToDrop: 0.5,
-			minRoomSize: 3,
-			maxRoomSize: 20,
-			spawnWidth: window.innerWidth/10,
-			spawnHeight: window.innerHeight/10
-		})
-		const cave = Cave({
-			numberOfPoints: 20,
-			minCaveSize: 10,
-			maxCaveSize: 20,
-			spawnWidth: 300,
-			spawnHeight: 300
-		})
+
+		// const condensor = 10
+
+		// const floor = Floor({
+		// 	numberOfRooms: 5,
+		// 	minRoomSize: 5,
+		// 	maxRoomSize: 15,
+		// 	hallWidth: 3,
+		// 	roomSpacing: 1,
+		// 	spawnWidth: window.innerWidth/condensor,
+		// 	spawnHeight: window.innerHeight/condensor
+		// })
+		// const cave = Cave({
+		// 	numberOfPoints: 20,
+		// 	minCaveSize: 10,
+		// 	maxCaveSize: 20,
+		// 	spawnWidth: 300,
+		// 	spawnHeight: 300
+		// })
+		const dungeon = DungeonGrid({ width: 200, height: 200, numberOfRooms: 50, minRoomSize: 5, maxRoomSize: 15, roomSpacing: 1 })
+		const cave = CaveGrid({ width: 200, height: 200, numberOfRooms: 15, minRoomSize: 8, maxRoomSize: 20, roomSpacing: 5})
 		this.state = {
-			floor,
+			dungeon,
 			cave
 		}
 	}
 
 	componentDidMount() {
 		const canvas = Canvas({})
-		const floor = this.state.floor
+		// const floor = this.state.floor
 		const cave = this.state.cave
-
-		const onFloorIteration = _ => {
-			canvas.clear()
-			floor.centerRooms()
-			floor.draw(canvas.ctx, 4, canvas.offset())
-		}
-		const onFloorCompletion = _ => {
-			canvas.clear()
-			floor.centerRooms()
-			floor.draw(canvas.ctx, 4, canvas.offset())
-			// floor.drawNeighborhood(canvas.ctx, 4, canvas.offset())
-			floor.drawHallways(canvas.ctx, 4, canvas.offset())
-		}
+		const dungeon = this.state.dungeon
 
 		const updateCanvas = _ => {
 			canvas.setDimensions(window.innerWidth, window.innerHeight)
-			floor.separateRoomsEntirely(1, {
-				onIteration: onFloorIteration,
-				onCompletion: onFloorCompletion
-			})
-			// canvas.clear()
+			canvas.clear()
+
+			cave.draw(canvas.ctx, 8, canvas.offset())
+			// floor.centerFloor()
+			// dungeon.draw(canvas.ctx, 8, canvas.offset())
 			// cave.centerCave()
 			// cave.draw(canvas.ctx, 4, canvas.offset())
 			// cave.drawNeighborhood(canvas.ctx, 4, canvas.offset())
 		}
+
+		window.update = updateCanvas
 
 		this.setState({
 			canvas

@@ -18,7 +18,7 @@ const Canvas = (options) => {
 	}
 
 	const offset = _ => {
-		return { x: (html.width / scale / 2) * scale, y: (html.height / scale / 2) * scale }
+		return { x: Math.round((html.width / scale / 2) * scale), y: Math.round((html.height / scale / 2) * scale) }
 	}
 
 	return Object.assign(
