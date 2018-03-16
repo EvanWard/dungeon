@@ -52,11 +52,7 @@ export default class App extends Component {
 			canvas.clear()
 
 			cave.draw(canvas.ctx, 8, canvas.offset())
-			// floor.centerFloor()
 			// dungeon.draw(canvas.ctx, 8, canvas.offset())
-			// cave.centerCave()
-			// cave.draw(canvas.ctx, 4, canvas.offset())
-			// cave.drawNeighborhood(canvas.ctx, 4, canvas.offset())
 		}
 
 		window.update = updateCanvas

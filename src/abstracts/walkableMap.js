@@ -116,6 +116,11 @@ const WalkableMap = (options) => {
 		})
 	}
 
+	const normalize = _ => {
+		coordinates.x = 0
+		coordinates.y = 0
+	}
+
 	return Object.assign(
 		options,
 		{
@@ -123,6 +128,7 @@ const WalkableMap = (options) => {
 			setTile,
 			clear,
 			fill,
+			normalize,
 			invert,
 			updateFromMap,
 			addFromMap,
@@ -135,6 +141,10 @@ const WalkableMap = (options) => {
 	)
 }
 
+WalkableMap.Empty = _ => {
+	return WalkableMap({ coordinates: { x: 0, y: 0}, map: [[]] })
+}
+
 WalkableMap.emptyFromRect = (rect) => {
 	const map = Array.from({ length: rect.height }, (nothing, y) => {
 		return Array.from({ length: rect.width }, (nothing, x) => {
@@ -145,6 +155,18 @@ WalkableMap.emptyFromRect = (rect) => {
 		coordinates: { x: rect.left, y: rect.top },
 		map
 	})
+}
+
+WalkableMap.RectFromWalkable = (walkable) => {
+	const coordinates = walkable.coordinates
+	const map = walkable.map
+
+	const left = coordinates.x
+	const top = coordinates.y
+	const right = coordinates.x + map[0].length
+	const bottom = coordinates.y + map.length
+
+	return Rect({ left, right, top, bottom })
 }
 
 WalkableMap.fromRect = (rect) => {
@@ -219,6 +241,17 @@ WalkableMap.MapContainingMaps = (mapA, mapB) => {
 	const rect = Rect({ left, right, top, bottom })
 
 	return WalkableMap.emptyFromRect(rect)
+}
+
+WalkableMap.FromMaps = (maps) => {
+	const walkable = maps.reduce((result, map) => {
+		return WalkableMap.MapContainingMaps(result, map)
+	}, WalkableMap.Empty())
+	maps.forEach((map) => {
+		walkable.addFromMap(map)
+	})
+	return walkable
+
 }
 
 WalkableMap.MapFromOverlaps = (mapA, mapB) => {

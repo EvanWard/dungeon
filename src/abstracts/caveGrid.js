@@ -156,10 +156,10 @@ const CaveGrid = (options) => {
 		centerRooms()
 
 		// drawing
-		ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'
-		drawRectGrid(dungeonRect)
-		ctx.strokeStyle = 'rgba(255, 255, 255, 1)'
-		drawRectBorder(dungeonRect)
+		// ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'
+		// drawRectGrid(dungeonRect)
+		// ctx.strokeStyle = 'rgba(255, 255, 255, 1)'
+		// drawRectBorder(dungeonRect)
 
 		const caveRect = Rect.fromRects(allRooms.map((circle) => { return circle.bounds() }))
 		const hallWalkable = WalkableMap.emptyFromRect(caveRect)
@@ -170,9 +170,39 @@ const CaveGrid = (options) => {
 		})
 
 		let p1, p2, dx, dy, distance, d, circleWalkable, angle, radius
-		PointConnector().getNeighborhood(allRooms.map((circle) => { return circle.coordinates })).forEach((line) => {
-			p1 = line.p1
-			p2 = line.p2
+		const tunnels = PointConnector().getCircleNeighborhood(allRooms)
+
+		const connections = []
+		const addConnection = (circles, denyThreshold = 0) => {
+			let connection1, connection2, index1, index2
+			connections.forEach((connection) => {
+				index1 = connection.indexOf(circles[0]) > -1 ? connection.indexOf(circles[0]) : undefined
+				index2 = connection.indexOf(circles[1]) > -1 ? connection.indexOf(circles[1]) : undefined
+				connection1 = index1 < 0 ? undefined : connection
+				connection2 = index2 < 0 ? undefined : connection
+			})
+			// if connections doesn't have either circle create new connection
+			if (!connection1 && !connection2) {
+				connections.push(circles)
+			}
+			// if connection has one circle, but other circle is not connected add unconnected circle to connected circle
+			else if (!!connection1 !== !!connection2) {
+				if (connection1) connection1.push(circles[1])
+				else if (connection2) connection2.push(circles[0])
+			}
+			// if both circles are in different connections, merge connections
+			else if (index1 !== index2) {
+				connections.splice(index1, 1)
+				connections.splice(index2, 1)
+				connections.push(connection1.concat(connection2))
+			}
+			// if circles are in same connection do nothing
+		}
+
+		tunnels.forEach((circles) => {
+			addConnection(circles)
+			p1 = circles[0].coordinates
+			p2 = circles[1].coordinates
 			dx = p2.x - p1.x
 			dy = p2.y - p1.y
 			distance = Math.sqrt(dx * dx + dy * dy)
@@ -191,7 +221,7 @@ const CaveGrid = (options) => {
 		ctx.fillStyle = 'white'
 		const renderer = WalkableRenderer()
 		renderer.fill(hallWalkable, ctx, gridSize, { x: ox, y: oy })
-		ctx.fillStyle = 'dodgerblue'
+		// ctx.fillStyle = 'dodgerblue'
 		renderer.fill(mainWalkable, ctx, gridSize, { x: ox, y: oy })
 
 	}

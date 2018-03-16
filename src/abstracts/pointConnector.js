@@ -104,10 +104,50 @@ const PointConnector = _ => {
 		}
 	}
 
+	const getCircleNeighborhood = (circles) => {
+		const connections = []
+		let circleA, circleB, circleC,
+			pointA, pointB, pointC,
+			abDist, acDist, bcDist,
+			skip
+
+		for (let i = 0; i < circles.length; i++) {
+			circleA = circles[i]
+			pointA = circleA.coordinates
+			for (let j = i + 1; j < circles.length; j++) {
+				skip = false
+				circleB = circles[j]
+				pointB = circleB.coordinates
+				abDist = distanceSquared(pointA, pointB)
+				for (let k = 0; k < circles.length; k++) {
+					if (k === i || k === j) {
+						continue
+					}
+					circleC = circles[k]
+					pointC = circleC.coordinates
+					acDist = distanceSquared(pointA, pointC)
+					bcDist = distanceSquared(pointB, pointC)
+
+					if (acDist < abDist && bcDist < abDist) {
+						skip = true
+					}
+					if (skip) {
+						break
+					}
+				}
+				if (!skip) {
+					connections.push([circleA, circleB])
+				}
+			}
+		}
+		return connections
+	}
+
 	return {
 		getNeighborhood,
 		getRectNeighborhood,
-		getRectConnection
+		getRectConnection,
+		getCircleNeighborhood
 	}
 }
 

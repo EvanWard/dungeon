@@ -229,18 +229,20 @@ const DungeonGrid = (options) => {
 			})
 
 			// const overlaps = WalkableMap.overlapMapFromMaps(hallwayWalkable, roomWalkable)
-			ctx.strokeStyle = 'dodgerblue'
-			ctx.fillStyle = 'dodgerblue'
-			renderer.fill(roomWalkable, ctx, gridSize, { x: ox, y: oy })
 
+			// ctx.fillStyle = 'dodgerblue'
+			// renderer.fill(roomWalkable, ctx, gridSize, { x: ox, y: oy })
+
+			// ctx.fillStyle = 'white'
+			// renderer.fill(hallwayWalkable, ctx, gridSize, { x: ox, y: oy })
+
+			// ctx.fillStyle = 'limegreen'
+			// renderer.fill(doorWalkable, ctx, gridSize, { x: ox, y: oy })
+
+			const totalWalkable = WalkableMap.FromMaps([roomWalkable, hallwayWalkable, doorWalkable])
+			totalWalkable.normalize()
 			ctx.strokeStyle = 'white'
-			ctx.fillStyle = 'white'
-			renderer.fill(hallwayWalkable, ctx, gridSize, { x: ox, y: oy })
-
-			ctx.fillStyle = 'limegreen'
-			// renderer.draw(overlapWalkable, ctx, gridSize, { x: ox, y: oy })
-
-			renderer.fill(doorWalkable, ctx, gridSize, { x: ox, y: oy })
+			renderer.draw(totalWalkable, ctx, gridSize, { x: ox, y: oy })
 		}
 
 		// generation
@@ -249,10 +251,10 @@ const DungeonGrid = (options) => {
 		centerRooms()
 
 		// drawing
-		ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'
-		drawRectGrid(dungeonRect)
-		ctx.strokeStyle = 'rgba(255, 255, 255, 1)'
-		drawRectBorder(dungeonRect)
+		// ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'
+		// drawRectGrid(dungeonRect)
+		// ctx.strokeStyle = 'rgba(255, 255, 255, 1)'
+		// drawRectBorder(dungeonRect)
 
 		// drawMainRooms()
 		// drawMainBorders()
