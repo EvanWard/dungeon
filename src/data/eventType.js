@@ -1,0 +1,9 @@
+
+const EVENT_TYPE = {
+	TAKE_DAMAGE: 1,
+	SELL_ITEM: 2,
+	USE_ITEM: 4,
+	GET_CURRENCY: 8
+}
+
+export default EVENT_TYPE
