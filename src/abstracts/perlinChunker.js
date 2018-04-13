@@ -1,3 +1,4 @@
+import util from './util.js'
 
 const getSquareSeed = (width, height, padding = 1) => {
 	let x, y
@@ -12,12 +13,6 @@ const getSeed = (length) => {
 	return new Array(length).fill(0).map(_ => {
   	return Math.random()
   })
-}
-
-const MultiArray = (height, width) => {
-	return new Array(height).fill(0).map(_ => {
-		return new Array(width)
-	})
 }
 
 const getArrayMin = (array) => {
@@ -60,36 +55,36 @@ const getArrayAverage = (array) => {
 	}, 0) / collapsedArray.length
 }
 
-const getChunk = (seed, width, height, octaves, bias, sx, sy, mapWidth, mapHeight) => {
-	const map = MultiArray(height, width)
-	let noise, scale, scaleAccumulate, pitch
+const getChunk = (seed, chunkWidth, chunkHeight, octaves, bias, mapWidth, mapHeight, sx = 0, sy = 0, transform = undefined) => {
+	const map = util.MultiArray(chunkHeight, chunkWidth)
+	let noise, scale, scaleAccumulate, pitch, output
 	let o, x, y
-	for (y = (sy || 0); y < (sy || 0 ) + height; y++) {
-		for (x = (sx || 0); x < (sx || 0) + width; x++) {
+	for (y = sy; y < sy + chunkHeight; y++) {
+		for (x = sx; x < sx + chunkWidth; x++) {
 			noise = 0.0
 			scale = 1.0
 			scaleAccumulate = 0
 			for (o = 0; o < octaves; o++) {
-				pitch = width >> o
+				pitch = chunkWidth >> o
 
 				let sampleX1 = Math.floor(x / pitch) * pitch || 0
-				let sampleX2 = (sampleX1 + pitch) % (mapWidth || width)
+				let sampleX2 = (sampleX1 + pitch) % (mapWidth || chunkWidth)
 
 				let sampleY1 = Math.floor(y / pitch) * pitch || 0
-				let sampleY2 = (sampleY1 + pitch) % (mapHeight || height)
+				let sampleY2 = (sampleY1 + pitch) % (mapHeight || chunkHeight)
 
 				let blendX = pitch ? (x - sampleX1) / pitch : 0
 				let blendY = pitch ? (y - sampleY1) / pitch : 0
 
-				let sampleT = (1.0 - blendX) * seed[sampleY1 * width + sampleX1] + blendX * seed[sampleY1 * width + sampleX2]
-				let sampleB = (1.0 - blendX) * seed[sampleY2 * width + sampleX1] + blendX * seed[sampleY2 * width + sampleX2]
+				let sampleT = (1.0 - blendX) * seed[sampleY1 * chunkWidth + sampleX1] + blendX * seed[sampleY1 * chunkWidth + sampleX2]
+				let sampleB = (1.0 - blendX) * seed[sampleY2 * chunkWidth + sampleX1] + blendX * seed[sampleY2 * chunkWidth + sampleX2]
 
 				noise += (blendY * (sampleB - sampleT) + sampleT) * scale
 				scaleAccumulate += scale
 				scale /= bias
 			}
-
-			map[y - (sy || 0)][x - (sx || 0)] = noise / scaleAccumulate
+			output = noise / scaleAccumulate
+			map[y - sy][x - sx] = transform ? output * transform[y][x] : output
 		}
 	}
 	return map
@@ -161,15 +156,15 @@ const oceanousElevations = {
 }
 
 const PerlinChunker = (options) => {
-	const { width, height, chunkSize, scale, bias } = options
-	const seed = getSquareSeed(width, height, 1)
+	const { width, height, chunkSize, scale, bias, transform } = options
+	const seed = getSeed(width * height)
 	const chunks = {}
 	return {
 		chunks,
 		getChunk(x, y) {
 			if (!chunks[x + ',' + y]) {
 				chunks[x + ',' + y] = {
-					chunk: getChunk(seed, chunkSize, chunkSize, scale, bias, x * chunkSize, y * chunkSize, width, height),
+					chunk: getChunk(seed, chunkSize, chunkSize, scale, bias, width, height, x * chunkSize, y * chunkSize, transform),
 					coordinates: {
 						x: x * chunkSize,
 						y: y * chunkSize

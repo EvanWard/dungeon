@@ -17,6 +17,7 @@ import CanvasNode from './components/canvas/canvas.js'
 import Canvas from './abstracts/canvas.js'
 
 import PerlinChunker from './abstracts/perlinChunker.js'
+import PerlinTransform from './abstracts/perlinTransform.js'
 
 export default class App extends Component {
 
@@ -29,7 +30,8 @@ export default class App extends Component {
 				height: 128,
 				chunkSize: 16,
 				scale: 8,
-				bias: 2
+				bias: 2,
+				transform: PerlinTransform({ width: 128, height: 128, type: 'square' })
 			})
 		}
 	}
@@ -74,7 +76,7 @@ export default class App extends Component {
 				chunker.getChunk(x, y)
 			}
 		}
-		const gridSize = 8
+		const gridSize = 4 * window.devicePixelRatio
 		Object.values(chunker.chunks).forEach(chunk => {
 			for (let y = 0; y < chunk.chunk.length; y++) {
 				for (let x = 0; x < chunk.chunk[y].length; x++) {
